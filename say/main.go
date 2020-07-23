@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 
 	pb "github.com/dezson/text-to-speech/api"
 	"google.golang.org/grpc"
@@ -15,6 +17,11 @@ func main() {
 	output := flag.String("o", "output.wav", "Wav file where the output will be written")
 	flag.Parse()
 
+	if flag.NArg() < 1 {
+		fmt.Println("Usage: \n\t say <text> ")
+		os.Exit(1)
+	}
+
 	conn, err := grpc.Dial(*backend, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Could not connect to %s: %v", *backend, err)
@@ -22,7 +29,7 @@ func main() {
 	defer conn.Close()
 
 	client := pb.NewTextToSpeechClient(conn)
-	text := &pb.Text{Text: "hello there"}
+	text := &pb.Text{Text: flag.Arg(0)}
 	res, err := client.Say(context.Background(), text)
 	if err != nil {
 		log.Fatalf("Could not say %s: %v", text.Text, err)
